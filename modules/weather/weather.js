@@ -23,7 +23,11 @@ function Weather(conf) {
       console.log(this.wdata);
       console.log(this.fdata);
     } else if (this.config.provider === "darksky") {
-      let url = `https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/${this.appid}/${this.lat},${this.lon}`;
+      let url = `https://cors-anywhere.herokuapp.com/https://api.darksky.net/forecast/${
+        this.appid
+      }/${this.lat},${
+        this.lon
+      }/?exclude=minutely,daily,flags,alerts&units=${this.config.unit || "si"}`;
       const response = await fetch(url).catch(error => console.error(error));
       this.fdata = await response.json().catch(error => console.error(error));
       console.log(this.fdata);
@@ -76,14 +80,38 @@ function Weather(conf) {
         let dayBlock = document.createElement("div");
         dayBlock.className = "forecast__item";
         dayBlock.innerHTML = `<div class="forecast-item__heading">${time}</div>
-  <div class="forecast-item__info"><i class="wi ${_this.applyIcon(
-    day.weather[0].icon
-  )}"></i> <span class="degrees">${Math.round(
+        <div class="forecast-item__info"><i class="wi ${_this.applyIcon(
+          day.weather[0].icon
+        )}"></i> <span class="degrees">${Math.round(
           day.main.temp
         )}<i class="wi wi-degrees"></i></span></div>`;
         FORECAST.appendChild(dayBlock);
       });
     } else if (_this.config.provider === "darksky") {
+      const currentWeather = _this.fdata.currently;
+      let forecast = _this.fdata.hourly.data;
+      const widgetHeader = `<h1>Kerala</h1><small>${currentWeather.summary}</small>`;
+      CURRENT_TEMP.innerHTML = `<i class="wi ${_this.get_icon(
+        currentWeather.icon
+      )}"></i> ${Math.round(
+        currentWeather.temperature
+      )} <i class="wi wi-degrees"></i>`;
+      CURRENT_LOCATION.innerHTML = widgetHeader;
+      // render each daily forecast
+      for (let i = 0; i <= 12; i += 3) {
+        let date = new Date(forecast[i].time * 1000);
+        let time = `${date.getHours()}:${date.getMinutes()}`;
+
+        let dayBlock = document.createElement("div");
+        dayBlock.className = "forecast__item";
+        dayBlock.innerHTML = `<div class="forecast-item__heading">${time}</div>
+        <div class="forecast-item__info"><i class="wi ${_this.get_icon(
+          forecast[i].icon
+        )}"></i> <span class="degrees">${Math.round(
+          forecast[i].temperature
+        )}<i class="wi wi-degrees"></i></span></div>`;
+        FORECAST.appendChild(dayBlock);
+      }
     } else {
       console.error("error");
     }
@@ -92,7 +120,7 @@ function Weather(conf) {
   this.render = function() {
     this.generate().then(() => this.renderOutput(this));
   };
-
+  //function for fetching icon in openweathermap
   this.applyIcon = function(icon) {
     let selectedIcon;
     switch (icon) {
@@ -137,6 +165,46 @@ function Weather(conf) {
     }
     return selectedIcon;
   };
+  //function for fetching darksky icon
+  this.get_icon = function(icon) {
+    let selectedIcon;
+    switch (icon) {
+      case "clear-day":
+        selectedIcon = "wi-day-sunny";
+        break;
+      case "clear-night":
+        selectedIcon = "wi-night-clear";
+        break;
+      case "rain":
+        selectedIcon = "wi-rain";
+        break;
+      case "snow":
+        selectedIcon = "wi-snow";
+        break;
+      case "sleet":
+        selectedIcon = "wi-sleet";
+        break;
+      case "wind":
+        selectedIcon = "wi-strong-wind";
+        break;
+      case "fog":
+        selectedIcon = "wi-fog";
+        break;
+      case "cloudy":
+        selectedIcon = "wi-cloudy";
+        break;
+      case "partly-cloudy-day":
+        selectedIcon = "wi-day-sunny-overcast";
+        break;
+      case "partly-cloudy-night":
+        selectedIcon = "wi-night-alt-partly-cloudy";
+        break;
+      default:
+        selectedIcon = "wi-cloudy";
+    }
+    return selectedIcon;
+  };
+  //function for fetching style names
   this.getStyles = function() {
     return ["weather.css", "weather-icons.min.css"];
   };
