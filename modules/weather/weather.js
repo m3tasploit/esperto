@@ -4,7 +4,7 @@ function Weather(conf) {
   this.lon = this.config.lon;
   this.appid = this.config.api_key;
   this.elt = document.getElementsByClassName(this.config.target)[0];
-  this.wrapper = false;
+  this.wrapped = false;
   this.fdata = null; //forecast weather
   this.wdata = null; //current weather
 
@@ -36,21 +36,21 @@ function Weather(conf) {
     }
   };
 
-  this.renderOutput = function(_this) {
-    if (!_this.wrapper) {
+  this.renderOutput = function() {
+    if (!this.wrapped) {
       let innerdiv = `<div class="component__weather-box">
-  <div class="component__weather-content">
-    <div class="weather-content__overview"></div>
-    <div class="weather-content__temp"></div>
-  </div>
-  <div class="component__forecast-box"></div>
-  </div>`;
+      <div class="component__weather-content">
+        <div class="weather-content__overview"></div>
+        <div class="weather-content__temp"></div>
+      </div>
+      <div class="component__forecast-box"></div>
+      </div>`;
       let wrapdiv = document.createElement("div");
       wrapdiv.setAttribute("id", "weather");
       wrapdiv.className = this.config.classlist;
       wrapdiv.innerHTML = innerdiv;
-      _this.elt.appendChild(wrapdiv);
-      _this.wrapper = true;
+      this.elt.appendChild(wrapdiv);
+      this.wrapped = true;
     }
     const CURRENT_LOCATION = document.getElementsByClassName(
       "weather-content__overview"
@@ -61,64 +61,82 @@ function Weather(conf) {
     const FORECAST = document.getElementsByClassName(
       "component__forecast-box"
     )[0];
-    if (_this.config.provider === "openweathermap") {
-      const currentWeather = _this.wdata.weather[0];
-      let location = _this.fdata.city;
-      let forecast = _this.fdata.list;
+    if (this.config.provider === "openweathermap") {
+      const currentWeather = this.wdata.weather[0];
+      let location = this.fdata.city;
+      let forecast = this.fdata.list;
       const widgetHeader = `<h1>${location.name}</h1><small>${currentWeather.description}</small>`;
-      CURRENT_TEMP.innerHTML = `<i class="wi ${_this.applyIcon(
+      CURRENT_TEMP.innerHTML = `<i class="wi ${this.applyIcon(
         currentWeather.icon
       )}"></i> ${Math.round(
-        _this.wdata.main.temp
+        this.wdata.main.temp
       )} <i class="wi wi-degrees"></i>`;
       CURRENT_LOCATION.innerHTML = widgetHeader;
+      //check for previous nodes..
+      while (FORECAST.lastChild) {
+        FORECAST.removeChild(FORECAST.lastChild);
+      }
       // render each daily forecast
-      forecast.forEach(day => {
-        let date = new Date(day.dt * 1000);
+      forecast.forEach(daytime => {
+        let date = new Date(daytime.dt * 1000);
         let time = `${date.getHours()}:${date.getMinutes()}`;
 
-        let dayBlock = document.createElement("div");
-        dayBlock.className = "forecast__item";
-        dayBlock.innerHTML = `<div class="forecast-item__heading">${time}</div>
-        <div class="forecast-item__info"><i class="wi ${_this.applyIcon(
-          day.weather[0].icon
+        let daytimeBlock = document.createElement("div");
+        daytimeBlock.className = "forecast__item";
+        daytimeBlock.innerHTML = `<div class="forecast-item__heading">${time}</div>
+        <div class="forecast-item__info"><i class="wi ${this.applyIcon(
+          daytime.weather[0].icon
         )}"></i> <span class="degrees">${Math.round(
-          day.main.temp
+          daytime.main.temp
         )}<i class="wi wi-degrees"></i></span></div>`;
-        FORECAST.appendChild(dayBlock);
+        FORECAST.appendChild(daytimeBlock);
       });
-    } else if (_this.config.provider === "darksky") {
-      const currentWeather = _this.fdata.currently;
-      let forecast = _this.fdata.hourly.data;
+    } else if (this.config.provider === "darksky") {
+      const currentWeather = this.fdata.currently;
+      let forecast = this.fdata.hourly.data;
       const widgetHeader = `<h1>Kerala</h1><small>${currentWeather.summary}</small>`;
-      CURRENT_TEMP.innerHTML = `<i class="wi ${_this.get_icon(
+      CURRENT_TEMP.innerHTML = `<i class="wi ${this.get_icon(
         currentWeather.icon
       )}"></i> ${Math.round(
         currentWeather.temperature
       )} <i class="wi wi-degrees"></i>`;
       CURRENT_LOCATION.innerHTML = widgetHeader;
+      //check for previous nodes..
+      while (FORECAST.lastChild) {
+        FORECAST.removeChild(FORECAST.lastChild);
+      }
       // render each daily forecast
       for (let i = 0; i <= 12; i += 3) {
         let date = new Date(forecast[i].time * 1000);
         let time = `${date.getHours()}:${date.getMinutes()}`;
 
-        let dayBlock = document.createElement("div");
-        dayBlock.className = "forecast__item";
-        dayBlock.innerHTML = `<div class="forecast-item__heading">${time}</div>
-        <div class="forecast-item__info"><i class="wi ${_this.get_icon(
+        let daytimeBlock = document.createElement("div");
+        daytimeBlock.className = "forecast__item";
+        daytimeBlock.innerHTML = `<div class="forecast-item__heading">${time}</div>
+        <div class="forecast-item__info"><i class="wi ${this.get_icon(
           forecast[i].icon
         )}"></i> <span class="degrees">${Math.round(
           forecast[i].temperature
         )}<i class="wi wi-degrees"></i></span></div>`;
-        FORECAST.appendChild(dayBlock);
+
+        FORECAST.appendChild(daytimeBlock);
       }
     } else {
       console.error("error");
     }
   };
 
+  this.renderUpdate = function() {
+    this.generate().then(() => this.renderOutput());
+  };
+
   this.render = function() {
-    this.generate().then(() => this.renderOutput(this));
+    this.generate().then(() => this.renderOutput());
+    let _this = this;
+    setInterval(
+      () => _this.renderUpdate(),
+      _this.config.updateinterval * 60 * 1000
+    );
   };
   //function for fetching icon in openweathermap
   this.applyIcon = function(icon) {

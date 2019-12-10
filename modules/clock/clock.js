@@ -6,11 +6,11 @@ function Clock(conf) {
   this.s = "";
   this.config = conf;
   this.elt = document.getElementsByClassName(this.config.target)[0];
-  this.wrapper = false;
+  this.wrapped = false;
 
   this.generate = function() {
     let today = new Date();
-    this.ht;
+
     this.h = today.getHours();
     this.m = today.getMinutes();
     if (this.config.seconds) {
@@ -58,9 +58,9 @@ function Clock(conf) {
   this.getStyles = function() {
     return ["clock.css"];
   };
-  this.render = function() {
+  this.renderOutput = function() {
     this.generate();
-    if (this.wrapper) {
+    if (this.wrapped) {
       document.getElementById(
         this.config.modulename
       ).innerHTML = this.timeString;
@@ -70,13 +70,15 @@ function Clock(conf) {
         tempelt.parentNode.removeChild(tempelt);
       }
       let wrapdiv = document.createElement("div");
-      wrapdiv.setAttribute("id", this.config.modulename);
+      wrapdiv.setAttribute("id", "clock");
       wrapdiv.className = this.config.classlist;
       wrapdiv.innerText = this.timeString;
       this.elt.appendChild(wrapdiv);
-      this.wrapper = true;
-      let _this = this;
-      setInterval(() => _this.render(), 1000);
+      this.wrapped = true;
     }
+  };
+
+  this.render = function() {
+    setInterval(() => this.renderOutput(), 1000);
   };
 }
