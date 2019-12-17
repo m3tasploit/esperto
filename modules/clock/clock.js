@@ -7,6 +7,7 @@ function Clock(conf) {
   this.config = conf;
   this.elt = document.getElementsByClassName(this.config.target)[0];
   this.wrapped = false;
+  this.modulename = "clock";
 
   this.generate = function() {
     let today = new Date();
@@ -61,16 +62,14 @@ function Clock(conf) {
   this.renderOutput = function() {
     this.generate();
     if (this.wrapped) {
-      document.getElementById(
-        this.config.modulename
-      ).innerHTML = this.timeString;
+      document.getElementById(this.modulename).innerHTML = this.timeString;
     } else {
       let tempelt = document.getElementById(this.config.modulename);
       if (tempelt) {
         tempelt.parentNode.removeChild(tempelt);
       }
       let wrapdiv = document.createElement("div");
-      wrapdiv.setAttribute("id", "clock");
+      wrapdiv.setAttribute("id", this.modulename);
       wrapdiv.className = this.config.classlist;
       wrapdiv.innerText = this.timeString;
       this.elt.appendChild(wrapdiv);

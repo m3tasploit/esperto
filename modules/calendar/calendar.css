@@ -1,0 +1,17 @@
+#calendar {
+  text-align: center;
+  border: 1px solid white;
+}
+
+#calendar .calendar-header {
+  border-bottom: 1px solid white;
+}
+
+#calendar td {
+  width: 14.3%;
+}
+
+/* #calendar table {
+  border: 1px solid white;
+  border-collapse: collapse;
+} */

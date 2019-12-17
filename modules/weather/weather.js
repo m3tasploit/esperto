@@ -132,11 +132,10 @@ function Weather(conf) {
 
   this.render = function() {
     this.generate().then(() => this.renderOutput());
-    // let _this = this;
-    setInterval(
-      () => this.renderUpdate(),
-      this.config.updateinterval * 60 * 1000
-    );
+
+    setInterval(() => {
+      this.renderUpdate();
+    }, this.config.updateinterval * 60 * 1000);
   };
   //function for fetching icon in openweathermap
   this.applyIcon = function(icon) {
